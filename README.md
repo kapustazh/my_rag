@@ -4,8 +4,6 @@
 
 # Instructions
 
-# Resources
-
 # System architecture
 
 # Chunking strategy
@@ -19,3 +17,7 @@
 # Challenges faced
 
 # Example usage
+
+# Resources
+
+- Introduction to Natural Language Processing: https://www.geeksforgeeks.org/nlp/introduction-to-natural-language-processing-nlp/
