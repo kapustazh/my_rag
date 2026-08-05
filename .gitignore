@@ -216,3 +216,21 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Subject
+en.subject.pdf
+
+# Cursor
+.cursor
+
+# Data / corpus (keep local only; do not push — triggers secret scanners)
+data/raw/
+
+# Moulinette binary / archives
+moulinette
+moulinette-ubuntu
+moulinette-fedora
+moulinette.zip
+vllm-*.zip
+# Obsidian vault config (local only; keep markdown docs)
+docs/.obsidian/
