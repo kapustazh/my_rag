@@ -22,6 +22,9 @@ help:
 	@printf "  $(GREEN)test$(RESET)         $(GRAY)- Run tests$(RESET)\n"
 
 install:
+	@mkdir -p .cache/uv_cache .cache/hf_cache
+	UV_CACHE_DIR=.cache/uv_cache \
+	HF_HOME=.cache/hf_cache \
 	@uv sync --python 3.10
 
 run:
@@ -32,7 +35,7 @@ debug:
 
 clean:
 	@find . -type f -name '*.py[co]' -delete
-	@rm -rf .mypy_cache .pytest_cache
+	@rm -rf .mypy_cache .pytest_cache .cache data/processed data/output
 	@find . -type d -name __pycache__ -exec rm -rf {} +
 
 lint:
@@ -43,11 +46,12 @@ lint:
 		--ignore-missing-imports \
 		--disallow-untyped-defs \
 		--check-untyped-defs \
+		--disallow-untyped-calls \
 		--exclude '(^\.venv/)'
 
 lint-strict:
 	@uv run flake8 src
-	@uv run mypy src --strict --exclude '(^\.venv/)'
+	@uv run mypy src --strict --exclude
 
 test:
 	@uv run pytest tests/
