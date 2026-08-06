@@ -5,9 +5,16 @@ description = "Retrieval Augmented Generation"
 requires-python = ">=3.10, <3.11"
 dependencies = [
     "pydantic>=2.0.0",
-    "tqdm>=4.67.1",
-    "fire>=0.7.0",
+    "fire>=0.6.0",
+    "tqdm>=4.66.0",
     "numpy>=1.26.0",
+    "bm25s>=0.2.0",
+    "scikit-learn>=1.4.0",
+    "transformers>=4.40.0",
+    "torch>=2.2.0",
+    "accelerate>=0.27.0",
+    "sentence-transformers>=3.0.0",
+    "faiss-cpu>=1.10.0",
 ]
 
 [dependency-groups]
@@ -28,5 +35,12 @@ testpaths = ["tests"]
 exclude = ["^\\.venv/"]
 
 [[tool.mypy.overrides]]
-module = ["fire", "fire.*"]
+module = [
+    "faiss",
+    "bm25s",
+    "fire",
+    "fire.*",
+    "tqdm",
+    "sklearn.*",
+]
 ignore_missing_imports = true
