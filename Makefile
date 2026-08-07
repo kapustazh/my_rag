@@ -23,15 +23,13 @@ help:
 
 install:
 	@mkdir -p .cache/uv_cache .cache/hf_cache
-	UV_CACHE_DIR=.cache/uv_cache \
-	HF_HOME=.cache/hf_cache \
-	@uv sync --python 3.10
+	@UV_CACHE_DIR=.cache/uv_cache HF_HOME=.cache/hf_cache uv sync --python 3.10
 
 run:
-	@uv run -m src.__main__ $(ARGS)
+	@UV_CACHE_DIR=.cache/uv_cache HF_HOME=.cache/hf_cache uv run -m src.__main__ $(ARGS)
 
 debug:
-	@uv run -m pdb -m src.__main__ $(ARGS)
+	@UV_CACHE_DIR=.cache/uv_cache HF_HOME=.cache/hf_cache uv run -m pdb -m src.__main__ $(ARGS)
 
 clean:
 	@find . -type f -name '*.py[co]' -delete
