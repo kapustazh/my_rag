@@ -1,59 +1,40 @@
 from pathlib import Path
-from typing import Iterator
 
 from tqdm import tqdm
 
 from src.chunk import chunk_python, chunk_markdown
 from src.models import Chunk
 
-_DOC_EXTENSIONS = {".md", ".py"}
+RAW_ROOT = Path("data/raw/vllm-0.10.1")
+_EXTENSIONS = {".md", ".py"}
 _SKIP_DIRS = {
-    ".git",
+    "tests",
+    "test",
     "__pycache__",
-    ".venv",
-    ".pytest_cache",
-    ".mypy_cache",
+    ".git",
+    ".github",
+    ".buildkite",
+    "benchmarks",
+    "third_party",
 }
 
 
-def _should_skip(path: Path) -> bool:
-    return any(part in _SKIP_DIRS for part in path.parts)
-
-
-def iter_required_files(root: Path) -> Iterator[Path]:
-    seen: set[Path] = set()
-
-    for path in root.glob("*"):
-        if not path.is_file():
-            continue
-        if path.suffix.lower() not in _DOC_EXTENSIONS:
-            continue
-        if _should_skip(path):
-            continue
-        resolved = path.resolve()
-        if resolved in seen:
-            continue
-        seen.add(resolved)
-        yield path
-
-
-def read_text(path: Path) -> str:
-    try:
-        return path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as exc:
-        raise ValueError(f"Failed to read text from {path}: {exc}") from exc
-
-
 def ingest_chunks(max_chunk_size: int) -> list[Chunk]:
-    root = Path("data/raw")
+    root = RAW_ROOT
     if not root.is_dir():
         raise FileNotFoundError(f"Corpus directory not found: {root}")
 
     project_root = Path.cwd().resolve()
     chunks: list[Chunk] = []
-    required_files = list(iter_required_files(root))
-    for path in tqdm(required_files, desc="Ingesting files"):
-        text = read_text(path)
+    paths = (
+        path
+        for path in root.rglob("*")
+        if path.is_file()
+        and path.suffix.lower() in _EXTENSIONS
+        and not any(part in _SKIP_DIRS for part in path.parts)
+    )
+    for path in tqdm(paths, desc="Ingesting files"):
+        text = path.read_text(encoding="utf-8")
         file_path = path.resolve().relative_to(project_root).as_posix()
 
         if path.suffix == ".py":
