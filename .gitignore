@@ -225,6 +225,7 @@ en.subject.pdf
 
 # Data / corpus (keep local only; do not push — triggers secret scanners)
 data/raw/
+data/processed/
 
 # Moulinette binary / archives
 moulinette
