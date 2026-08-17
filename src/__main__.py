@@ -96,8 +96,8 @@ class RAGCli:
 def main() -> None:
     try:
         fire.Fire(RAGCli)
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+    except Exception as exc:
+        print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
 
 

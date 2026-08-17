@@ -5,12 +5,22 @@ import bm25s
 
 from src.models import Chunk, MinimalSource
 
-_FILE_PATH_TOKEN = re.compile(r"[a-z0-9_\.]+")
+_TOKEN = re.compile(r"[a-z0-9_]+")
+_QUESTION_STOPWORDS = frozenset({
+    "what", "is", "are", "how", "does", "do", "why", "when",
+    "where", "which", "who", "the", "a", "an", "in", "of",
+    "for", "to", "and", "explain", "describe", "tell", "me", "about",
+})
 INDEX_DIR = Path("data/processed/lexical")
 
 
 def tokenize(text: str) -> list[str]:
-    return _FILE_PATH_TOKEN.findall(text.lower())
+    tokens: list[str] = []
+    for tok in _TOKEN.findall(text.lower()):
+        tokens.append(tok)
+        if "_" in tok:
+            tokens.extend(part for part in tok.split("_") if part)
+    return tokens
 
 
 def build_index(chunks: list[Chunk]) -> bm25s.BM25:
@@ -45,6 +55,8 @@ def load_index() -> bm25s.BM25:
 
 def search(query: str, k: int) -> list[MinimalSource]:
     tokens = tokenize(query)
+    keywords = [t for t in tokens if t not in _QUESTION_STOPWORDS]
+    tokens = keywords or tokens
     # print(f"tokens: {tokens}")
     if not tokens:
         return []
