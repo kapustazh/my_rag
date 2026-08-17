@@ -6,11 +6,34 @@ import bm25s
 from src.models import Chunk, MinimalSource
 
 _TOKEN = re.compile(r"[a-z0-9_]+")
-_QUESTION_STOPWORDS = frozenset({
-    "what", "is", "are", "how", "does", "do", "why", "when",
-    "where", "which", "who", "the", "a", "an", "in", "of",
-    "for", "to", "and", "explain", "describe", "tell", "me", "about",
-})
+_QUESTION_STOPWORDS = frozenset(
+    {
+        "what",
+        "is",
+        "are",
+        "how",
+        "does",
+        "do",
+        "why",
+        "when",
+        "where",
+        "which",
+        "who",
+        "the",
+        "a",
+        "an",
+        "in",
+        "of",
+        "for",
+        "to",
+        "and",
+        "explain",
+        "describe",
+        "tell",
+        "me",
+        "about",
+    }
+)
 INDEX_DIR = Path("data/processed/lexical")
 
 
@@ -23,11 +46,17 @@ def tokenize(text: str) -> list[str]:
     return tokens
 
 
+def _path_tokens(file_path: str) -> list[str]:
+    path = Path(file_path)
+    return tokenize(path.stem) + tokenize(path.parent.name)
+
+
 def build_index(chunks: list[Chunk]) -> bm25s.BM25:
     if not chunks:
         raise ValueError("No chunks to index")
     tokenized_chunks = [
-        tokenize(f"{chunk.file_path} {chunk.text}") for chunk in chunks
+        _path_tokens(chunk.file_path) * 3 + tokenize(chunk.text)
+        for chunk in chunks
     ]
     retriever = bm25s.BM25()
     retriever.index(tokenized_chunks, show_progress=True)  # tqdm progress bar
