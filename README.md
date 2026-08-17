@@ -39,3 +39,5 @@ To block merging when CI fails, enable branch protection on `main`:
 # Resources
 
 - Introduction to Natural Language Processing: https://www.geeksforgeeks.org/nlp/introduction-to-natural-language-processing-nlp/
+- BM25 info: https://www.geeksforgeeks.org/nlp/what-is-bm25-best-matching-25-algorithm/
+https://medium.com/@ayushigupta9723/rags-evaluation-metrics-and-standard-industrial-pipeline-to-do-evaluation-f37c3791a2f8
