@@ -1,7 +1,6 @@
 import re
-from pathlib import Path
-
 import bm25s
+from pathlib import Path
 
 from src.models import Chunk, MinimalSource
 
@@ -100,26 +99,3 @@ def search(query: str, k: int) -> list[MinimalSource]:
         show_progress=False,
     )
     return [MinimalSource.model_validate(doc) for doc in results.documents[0]]
-
-
-if __name__ == "__main__":
-    lora = "load_lora_adapter endpoint"
-    other = "unrelated python"
-    chunks = [
-        Chunk(
-            file_path="docs/lora.md",
-            first_character_index=0,
-            last_character_index=len(lora),
-            text=lora,
-        ),
-        Chunk(
-            file_path="vllm/other.py",
-            first_character_index=0,
-            last_character_index=len(other),
-            text=other,
-        ),
-    ]
-    build_index(chunks)
-    hits = search("load_lora_adapter endpoint", k=1)
-    assert hits[0].file_path == "docs/lora.md", hits
-    print(hits[0])
