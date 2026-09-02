@@ -15,11 +15,12 @@ def _run_help(*args: str) -> str:
 
 def test_fire_index_help() -> None:
     output = _run_help("index")
-    assert "max_chunk_size" in output
+
     assert "max_chunk_size" in output
 
 
 def test_fire_lists_search_dataset() -> None:
     output = _run_help("search_dataset")
+
     assert "dataset_path" in output
     assert "save_directory" in output
