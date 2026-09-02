@@ -15,7 +15,8 @@ from src.models import (
 )
 from src.retrieve import build_index
 from src.retrieve import search as retrieve_search
-from src.validators import validate_file, validate_k, validate_query
+from src.services import answer_query, search_query
+from src.validators import validate_file, validate_k
 from src.validators import validate_max_chunk_size
 
 
@@ -28,20 +29,8 @@ class RAGCli:
 
     def search(self, query: str, *, k: int) -> None:
         """Return the top-k sources for a single query."""
-        validate_query(query)
-        validate_k(k)
-        print(
-            StudentSearchResults(
-                k=k,
-                search_results=[
-                    MinimalSearchResults(
-                        question_id="",
-                        question=query,
-                        retrieved_sources=retrieve_search(query, k),
-                    )
-                ],
-            ).model_dump_json(indent=2)
-        )
+        result = search_query(query, k)
+        print(result.model_dump_json(indent=2))
 
     def search_dataset(
         self, *, dataset_path: str, k: int, save_directory: str
@@ -73,21 +62,7 @@ class RAGCli:
 
     def answer(self, query: str, *, k: int) -> None:
         """Answer a single query using the retrieved context."""
-        validate_query(query)
-        validate_k(k)
-        sources = retrieve_search(query, k)
-        answer = generate_answer(query, sources, QwenGenerator())
-        result = StudentSearchResultsAndAnswer(
-            k=k,
-            search_results=[
-                MinimalAnswer(
-                    question_id="",
-                    question=query,
-                    retrieved_sources=sources,
-                    answer=answer,
-                )
-            ],
-        )
+        result = answer_query(query, k, QwenGenerator())
         print(result.model_dump_json(indent=2))
 
     def answer_dataset(
