@@ -54,16 +54,22 @@ def chunk_python(text: str, max_chunk_size: int) -> list[tuple[int, int]]:
 
     _add_span(text, 0, starts[defs[0].lineno - 1], max_chunk_size, span_ranges)
     for node in defs:
+        end_lineno = node.end_lineno
+        if end_lineno is None:
+            continue
         _add_span(
             text,
             starts[node.lineno - 1],
-            starts[node.end_lineno],
+            starts[end_lineno],
             max_chunk_size,
             span_ranges,
         )
+    last_end_lineno = defs[-1].end_lineno
+    if last_end_lineno is None:
+        return span_ranges
     _add_span(
         text,
-        starts[defs[-1].end_lineno],
+        starts[last_end_lineno],
         len(text),
         max_chunk_size,
         span_ranges,
@@ -91,16 +97,3 @@ def chunk_markdown(text: str, max_chunk_size: int) -> list[tuple[int, int]]:
     for start, end in _section_ranges(text):
         _add_span(text, start, end, max_chunk_size, span_ranges)
     return span_ranges
-
-
-if __name__ == "__main__":
-    py = "import os\n# gap\ndef f():\n    return 1\n\nprint(f())\n# end\n"
-    md = "# title\n\nhello\n\n## subtitle\n\ntext"
-
-    ranges = chunk_python(py, 2000)
-    assert any("def f" in py[s:e] for s, e in ranges)
-    for start, end in ranges:
-        print("py", repr(py[start:end]))
-
-    for start, end in chunk_markdown(md, 2000):
-        print("md", repr(md[start:end]))
