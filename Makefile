@@ -37,7 +37,7 @@ clean:
 	@find . -type d -name __pycache__ -exec rm -rf {} +
 
 lint:
-	@uv run flake8 src
+	@uv run flake8 src --exclude=.git,.venv,.cache,__pycache__,data
 	@uv run mypy src \
 		--warn-return-any \
 		--warn-unused-ignores \
@@ -45,13 +45,13 @@ lint:
 		--disallow-untyped-defs \
 		--check-untyped-defs \
 		--disallow-untyped-calls \
-		--exclude '(^\.venv/)'
+		--exclude='(^\.venv/|^\.cache/|^data/)'
 
 lint-strict:
-	@uv run flake8 src
-	@uv run mypy src --strict --exclude
+	@uv run flake8 . --exclude=.git,.venv,.cache,__pycache__,data
+	@uv run mypy . --strict --ignore-missing-imports --exclude='(^\.venv/|^\.cache/|^data/)'
 
 test:
-	@uv run pytest tests/
+	@uv run python -m pytest tests/
 
 .PHONY: help install run debug clean lint lint-strict test
