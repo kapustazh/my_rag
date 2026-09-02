@@ -4,8 +4,15 @@ import fire
 from tqdm import tqdm
 
 from src.evaluate import recall_at_k
+from src.generate import QwenGenerator, generate_answer
 from src.ingest import ingest_chunks
-from src.models import MinimalSearchResults, RagDataset, StudentSearchResults
+from src.models import (
+    MinimalAnswer,
+    MinimalSearchResults,
+    RagDataset,
+    StudentSearchResults,
+    StudentSearchResultsAndAnswer,
+)
 from src.retrieve import build_index
 from src.retrieve import search as retrieve_search
 from src.validators import validate_file, validate_k, validate_query
@@ -41,11 +48,11 @@ class RAGCli:
     ) -> None:
         """Run search over a whole dataset and write a StudentSearchResults
         JSON file."""
-        dataset_path = Path(dataset_path)
-        save_directory = Path(save_directory)
-        validate_file(dataset_path)
+        dataset_file = Path(dataset_path)
+        output_directory = Path(save_directory)
+        validate_file(dataset_file)
         validate_k(k)
-        dataset = RagDataset.model_validate_json(dataset_path.read_text())
+        dataset = RagDataset.model_validate_json(dataset_file.read_text())
         results = StudentSearchResults(
             k=k,
             search_results=[
@@ -59,8 +66,8 @@ class RAGCli:
                 )
             ],
         )
-        save_directory.mkdir(parents=True, exist_ok=True)
-        out = save_directory / dataset_path.name
+        output_directory.mkdir(parents=True, exist_ok=True)
+        out = output_directory / dataset_file.name
         out.write_text(results.model_dump_json(indent=2))
         print(f"Wrote {out}")
 
@@ -68,27 +75,70 @@ class RAGCli:
         """Answer a single query using the retrieved context."""
         validate_query(query)
         validate_k(k)
+        sources = retrieve_search(query, k)
+        answer = generate_answer(query, sources, QwenGenerator())
+        result = StudentSearchResultsAndAnswer(
+            k=k,
+            search_results=[
+                MinimalAnswer(
+                    question_id="",
+                    question=query,
+                    retrieved_sources=sources,
+                    answer=answer,
+                )
+            ],
+        )
+        print(result.model_dump_json(indent=2))
 
     def answer_dataset(
-        self, *, student_search_results_path: Path, save_directory: Path
+        self, *, student_search_results_path: str, save_directory: str
     ) -> None:
         """Generate answers for a dataset, producing a
         StudentSearchResultsAndAnswer JSON file."""
-        validate_file(student_search_results_path)
+        results_file = Path(student_search_results_path)
+        output_directory = Path(save_directory)
+        validate_file(results_file)
+        results = StudentSearchResults.model_validate_json(
+            results_file.read_text(encoding="utf-8")
+        )
+        generator = QwenGenerator()
+        answered = StudentSearchResultsAndAnswer(
+            k=results.k,
+            search_results=[
+                MinimalAnswer(
+                    question_id=item.question_id,
+                    question=item.question,
+                    retrieved_sources=item.retrieved_sources,
+                    answer=generate_answer(
+                        item.question,
+                        item.retrieved_sources,
+                        generator,
+                    ),
+                )
+                for item in tqdm(results.search_results, desc="Generating")
+            ],
+        )
+        output_directory.mkdir(parents=True, exist_ok=True)
+        output_path = output_directory / results_file.name
+        output_path.write_text(
+            answered.model_dump_json(indent=2),
+            encoding="utf-8",
+        )
+        print(f"Wrote {output_path}")
 
     def evaluate(
         self, *, student_search_results_path: str, dataset_path: str
     ) -> None:
         """Report your own recall@k against a ground-truth dataset,
         for your own testing."""
-        student_search_results_path = Path(student_search_results_path)
-        dataset_path = Path(dataset_path)
-        validate_file(student_search_results_path)
-        validate_file(dataset_path)
+        results_file = Path(student_search_results_path)
+        dataset_file = Path(dataset_path)
+        validate_file(results_file)
+        validate_file(dataset_file)
         results = StudentSearchResults.model_validate_json(
-            student_search_results_path.read_text()
+            results_file.read_text()
         )
-        dataset = RagDataset.model_validate_json(dataset_path.read_text())
+        dataset = RagDataset.model_validate_json(dataset_file.read_text())
         score = recall_at_k(results, dataset)
         print(f"recall@{results.k}: {score:.4f}")
 
