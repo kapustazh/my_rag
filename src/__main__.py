@@ -18,6 +18,7 @@ from src.retrieve import search as retrieve_search
 from src.services import answer_query, search_query
 from src.validators import validate_file, validate_k
 from src.validators import validate_max_chunk_size
+from src.validators import validate_query, validate_string
 
 
 class RAGCli:
@@ -29,6 +30,8 @@ class RAGCli:
 
     def search(self, query: str, *, k: int) -> None:
         """Return the top-k sources for a single query."""
+        validate_query(query)
+        validate_k(k)
         result = search_query(query, k)
         print(result.model_dump_json(indent=2))
 
@@ -37,6 +40,8 @@ class RAGCli:
     ) -> None:
         """Run search over a whole dataset and write a StudentSearchResults
         JSON file."""
+        dataset_path = validate_string(dataset_path, "dataset_path")
+        save_directory = validate_string(save_directory, "save_directory")
         dataset_file = Path(dataset_path)
         output_directory = Path(save_directory)
         validate_file(dataset_file)
@@ -50,9 +55,7 @@ class RAGCli:
                     question=question.question,
                     retrieved_sources=retrieve_search(question.question, k),
                 )
-                for question in tqdm(
-                    dataset.rag_questions, desc="Searching"
-                )
+                for question in tqdm(dataset.rag_questions, desc="Searching")
             ],
         )
         output_directory.mkdir(parents=True, exist_ok=True)
@@ -62,6 +65,8 @@ class RAGCli:
 
     def answer(self, query: str, *, k: int) -> None:
         """Answer a single query using the retrieved context."""
+        validate_query(query)
+        validate_k(k)
         result = answer_query(query, k, QwenGenerator())
         print(result.model_dump_json(indent=2))
 
@@ -70,6 +75,10 @@ class RAGCli:
     ) -> None:
         """Generate answers for a dataset, producing a
         StudentSearchResultsAndAnswer JSON file."""
+        student_search_results_path = validate_string(
+            student_search_results_path, "student_search_results_path"
+        )
+        save_directory = validate_string(save_directory, "save_directory")
         results_file = Path(student_search_results_path)
         output_directory = Path(save_directory)
         validate_file(results_file)
@@ -106,6 +115,10 @@ class RAGCli:
     ) -> None:
         """Report your own recall@k against a ground-truth dataset,
         for your own testing."""
+        student_search_results_path = validate_string(
+            student_search_results_path, "student_search_results_path"
+        )
+        dataset_path = validate_string(dataset_path, "dataset_path")
         results_file = Path(student_search_results_path)
         dataset_file = Path(dataset_path)
         validate_file(results_file)
