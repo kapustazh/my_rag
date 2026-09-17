@@ -37,8 +37,8 @@ clean:
 	@find . -type d -name __pycache__ -exec rm -rf {} +
 
 lint:
-	@uv run flake8 src --exclude=.git,.venv,.cache,__pycache__,data
-	@uv run mypy src \
+	@uv run flake8 . --exclude=.git,.venv,.cache,__pycache__,data
+	@uv run mypy . \
 		--warn-return-any \
 		--warn-unused-ignores \
 		--ignore-missing-imports \
