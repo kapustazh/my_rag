@@ -87,28 +87,26 @@ def chunk_python(text: str, max_chunk_size: int) -> list[tuple[int, int]]:
         _add_span(text, 0, len(text), max_chunk_size, span_ranges)
         return span_ranges or _windows(text, max_chunk_size)
 
-    _add_span(text, 0, starts[defs[0].lineno - 1], max_chunk_size, span_ranges)
+    cursor = 0
     for node in defs:
         end_lineno = node.end_lineno
         if end_lineno is None:
             continue
+        start_lineno = min(
+            [node.lineno, *(item.lineno for item in node.decorator_list)]
+        )
+        start = starts[start_lineno - 1]
+        end = starts[end_lineno]
+        _add_span(text, cursor, start, max_chunk_size, span_ranges)
         _add_span(
             text,
-            starts[node.lineno - 1],
-            starts[end_lineno],
+            start,
+            end,
             max_chunk_size,
             span_ranges,
         )
-    last_end_lineno = defs[-1].end_lineno
-    if last_end_lineno is None:
-        return span_ranges
-    _add_span(
-        text,
-        starts[last_end_lineno],
-        len(text),
-        max_chunk_size,
-        span_ranges,
-    )
+        cursor = end
+    _add_span(text, cursor, len(text), max_chunk_size, span_ranges)
     return span_ranges
 
 

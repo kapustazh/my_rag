@@ -15,6 +15,32 @@ def test_chunk_python_keeps_function() -> None:
     assert any("def f" in code[start:end] for start, end in ranges)
 
 
+def test_chunk_python_keeps_all_meaningful_text() -> None:
+    code = (
+        "GLOBAL = 1\n\n"
+        "def first():\n"
+        "    return GLOBAL\n\n"
+        "# Keep this comment.\n"
+        "BETWEEN = 2\n\n"
+        "@decorator\n"
+        "def second():\n"
+        "    return BETWEEN\n"
+    )
+
+    ranges = chunk_python(code, 2000)
+    covered = {
+        index
+        for start, end in ranges
+        for index in range(start, end)
+    }
+
+    assert all(
+        char.isspace() or index in covered
+        for index, char in enumerate(code)
+    )
+    assert any("@decorator" in code[start:end] for start, end in ranges)
+
+
 def test_search_returns_matching_source(
     tmp_path: Path,
     monkeypatch: MonkeyPatch,
