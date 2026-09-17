@@ -112,7 +112,6 @@ def load_index() -> bm25s.BM25:
         raise FileNotFoundError(
             f"Index not found: {INDEX_DIR}. Run index first."
         )
-    # TODO: Reloads per call; add cache when search_dataset hits disk twice
     return bm25s.BM25.load(INDEX_DIR, load_corpus=True)
 
 
