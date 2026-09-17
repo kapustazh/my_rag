@@ -10,6 +10,15 @@ def read_source_text(
     source: MinimalSource,
     project_root: Path | None = None,
 ) -> str:
+    """Read the exact text covered by a source location.
+
+    Args:
+        source: File path and character range to read.
+        project_root: Base directory for corpus-relative paths.
+
+    Returns:
+        Text inside the source range.
+    """
     root = project_root or Path.cwd()
     path = root / source.file_path
     text = path.read_text(encoding="utf-8")
@@ -21,6 +30,16 @@ def build_prompt_to_answer(
     sources: list[MinimalSource],
     project_root: Path | None = None,
 ) -> str:
+    """Build a source-grounded answer prompt.
+
+    Args:
+        question: Question the model should answer.
+        sources: Retrieved source locations to place in context.
+        project_root: Base directory for corpus-relative paths.
+
+    Returns:
+        Prompt containing the question and exact source spans.
+    """
     context = (
         "\n\n".join(
             f"[{source.file_path}:{source.first_character_index}-"
@@ -41,17 +60,33 @@ def build_prompt_to_answer(
 
 
 class QwenGenerator:
+    """Lazily load Qwen and generate deterministic answers.
+
+    Attributes:
+        model_name: Hugging Face model identifier.
+        max_new_tokens: Maximum number of generated tokens.
+        tokenizer: Loaded tokenizer, or ``None`` before first use.
+        model: Loaded language model, or ``None`` before first use.
+    """
+
     def __init__(
         self,
         model_name: str = MODEL_NAME,
         max_new_tokens: int = 256,
     ) -> None:
+        """Configure the local answer generator.
+
+        Args:
+            model_name: Hugging Face model identifier.
+            max_new_tokens: Maximum number of generated tokens.
+        """
         self.model_name = model_name
         self.max_new_tokens = max_new_tokens
         self.tokenizer: Any | None = None
         self.model: Any | None = None
 
     def _load(self) -> None:
+        """Load the tokenizer and model on first use."""
         if self.model is not None:
             return
 
@@ -65,6 +100,17 @@ class QwenGenerator:
         )
 
     def answer(self, prompt: str) -> str:
+        """Generate an answer within the model context budget.
+
+        Args:
+            prompt: Grounded prompt to send to the model.
+
+        Returns:
+            Decoded model response without surrounding whitespace.
+
+        Raises:
+            RuntimeError: If model initialization does not complete.
+        """
         self._load()
         if self.model is None or self.tokenizer is None:
             raise RuntimeError("Model or tokenizer not loaded")
@@ -101,6 +147,17 @@ def generate_answer(
     generator: QwenGenerator,
     project_root: Path | None = None,
 ) -> str:
+    """Generate an answer from a question and retrieved sources.
+
+    Args:
+        question: Question the model should answer.
+        sources: Retrieved source locations used as evidence.
+        generator: Configured local text generator.
+        project_root: Base directory for corpus-relative paths.
+
+    Returns:
+        Generated grounded answer.
+    """
     return generator.answer(
         build_prompt_to_answer(question, sources, project_root)
     )

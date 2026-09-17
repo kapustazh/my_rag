@@ -10,7 +10,15 @@ from src.validators import validate_k, validate_query
 
 
 def search_query(query: str, k: int) -> StudentSearchResults:
-    """Return the top-k sources for a single query."""
+    """Return the top-k sources for a single query.
+
+    Args:
+        query: Question or search text.
+        k: Maximum number of sources to return.
+
+    Returns:
+        Structured search results for the query.
+    """
     validate_query(query)
     validate_k(k)
     return StudentSearchResults(
@@ -30,6 +38,16 @@ def answer_query(
     k: int,
     generator: QwenGenerator,
 ) -> StudentSearchResultsAndAnswer:
+    """Retrieve evidence and generate an answer for one query.
+
+    Args:
+        query: Question to answer.
+        k: Maximum number of sources to retrieve.
+        generator: Text generator used to produce the answer.
+
+    Returns:
+        Structured retrieval results and generated answer.
+    """
     search_result = search_query(query, k)
     result = search_result.search_results[0]
     return StudentSearchResultsAndAnswer(

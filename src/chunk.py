@@ -7,6 +7,15 @@ _DEF_NODES = (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 
 
 def _windows(text: str, max_size: int) -> list[tuple[int, int]]:
+    """Split text into non-empty fixed-size character ranges.
+
+    Args:
+        text: Text to split.
+        max_size: Maximum number of characters per range.
+
+    Returns:
+        Start and end offsets for each non-empty range.
+    """
     ranges: list[tuple[int, int]] = []
     for start in range(0, len(text), max_size):
         end = min(start + max_size, len(text))
@@ -16,6 +25,14 @@ def _windows(text: str, max_size: int) -> list[tuple[int, int]]:
 
 
 def _line_starts(text: str) -> list[int]:
+    """Return the character offset where each source line starts.
+
+    Args:
+        text: Source text whose lines should be located.
+
+    Returns:
+        Character offsets, including zero and the final line boundary.
+    """
     return [0, *accumulate(map(len, text.splitlines(keepends=True)))]
 
 
@@ -26,6 +43,15 @@ def _add_span(
     max_chunk_size: int,
     span_ranges: list[tuple[int, int]],
 ) -> None:
+    """Append a non-empty span, splitting it when it is too large.
+
+    Args:
+        text: Complete source text.
+        start: Inclusive span start.
+        end: Exclusive span end.
+        max_chunk_size: Maximum number of characters per chunk.
+        span_ranges: Range list to update in place.
+    """
     if start >= end or not text[start:end].strip():
         return
     if end - start <= max_chunk_size:
@@ -36,6 +62,15 @@ def _add_span(
 
 
 def chunk_python(text: str, max_chunk_size: int) -> list[tuple[int, int]]:
+    """Split Python source around top-level functions and classes.
+
+    Args:
+        text: Python source text.
+        max_chunk_size: Maximum number of characters per chunk.
+
+    Returns:
+        Start and end offsets for the generated chunks.
+    """
     try:
         tree = ast.parse(text)
     except SyntaxError:
@@ -78,6 +113,14 @@ def chunk_python(text: str, max_chunk_size: int) -> list[tuple[int, int]]:
 
 
 def _section_ranges(text: str) -> list[tuple[int, int]]:
+    """Locate Markdown sections delimited by headings.
+
+    Args:
+        text: Markdown or plain-text content.
+
+    Returns:
+        Start and end offsets for each section.
+    """
     starts = [match.start() for match in _HEADING.finditer(text)]
     if not starts:
         return [(0, len(text))]
@@ -91,6 +134,15 @@ def _section_ranges(text: str) -> list[tuple[int, int]]:
 
 
 def chunk_markdown(text: str, max_chunk_size: int) -> list[tuple[int, int]]:
+    """Split Markdown or text by headings and maximum size.
+
+    Args:
+        text: Markdown or plain-text content.
+        max_chunk_size: Maximum number of characters per chunk.
+
+    Returns:
+        Start and end offsets for the generated chunks.
+    """
     if not text.strip():
         return []
     span_ranges: list[tuple[int, int]] = []

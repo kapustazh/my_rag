@@ -22,14 +22,25 @@ from src.validators import validate_query, validate_string
 
 
 class RAGCli:
+    """Expose the RAG pipeline through Python Fire commands."""
+
     def index(self, *, max_chunk_size: int = 2000) -> None:
-        """Ingest data/raw/ and build the index under data/processed/."""
+        """Ingest the raw corpus and build the persisted index.
+
+        Args:
+            max_chunk_size: Maximum number of characters per source chunk.
+        """
         validate_max_chunk_size(max_chunk_size)
         chunks = ingest_chunks(max_chunk_size)
         build_index(chunks)
 
     def search(self, query: str, *, k: int) -> None:
-        """Return the top-k sources for a single query."""
+        """Print the top-ranked sources for a single query.
+
+        Args:
+            query: Question or search text.
+            k: Maximum number of sources to return.
+        """
         validate_query(query)
         validate_k(k)
         result = search_query(query, k)
@@ -38,8 +49,13 @@ class RAGCli:
     def search_dataset(
         self, *, dataset_path: str, k: int, save_directory: str
     ) -> None:
-        """Run search over a whole dataset and write a StudentSearchResults
-        JSON file."""
+        """Search a dataset and write structured results as JSON.
+
+        Args:
+            dataset_path: Path to an input RAG dataset.
+            k: Maximum number of sources per question.
+            save_directory: Directory in which to write the result file.
+        """
         dataset_path = validate_string(dataset_path, "dataset_path")
         save_directory = validate_string(save_directory, "save_directory")
         dataset_file = Path(dataset_path)
@@ -64,7 +80,12 @@ class RAGCli:
         print(f"Wrote {out}")
 
     def answer(self, query: str, *, k: int) -> None:
-        """Answer a single query using the retrieved context."""
+        """Print an answer generated from retrieved context.
+
+        Args:
+            query: Question to answer.
+            k: Maximum number of sources to retrieve.
+        """
         validate_query(query)
         validate_k(k)
         result = answer_query(query, k, QwenGenerator())
@@ -73,8 +94,12 @@ class RAGCli:
     def answer_dataset(
         self, *, student_search_results_path: str, save_directory: str
     ) -> None:
-        """Generate answers for a dataset, producing a
-        StudentSearchResultsAndAnswer JSON file."""
+        """Generate dataset answers and write them as structured JSON.
+
+        Args:
+            student_search_results_path: Path to saved search results.
+            save_directory: Directory in which to write answered results.
+        """
         student_search_results_path = validate_string(
             student_search_results_path, "student_search_results_path"
         )
@@ -113,8 +138,12 @@ class RAGCli:
     def evaluate(
         self, *, student_search_results_path: str, dataset_path: str
     ) -> None:
-        """Report your own recall@k against a ground-truth dataset,
-        for your own testing."""
+        """Print recall at k against a ground-truth dataset.
+
+        Args:
+            student_search_results_path: Path to saved search results.
+            dataset_path: Path to a dataset with ground-truth sources.
+        """
         student_search_results_path = validate_string(
             student_search_results_path, "student_search_results_path"
         )
@@ -132,6 +161,7 @@ class RAGCli:
 
 
 def main() -> None:
+    """Run the CLI and convert failures into concise error messages."""
     try:
         fire.Fire(RAGCli)
     except Exception as exc:

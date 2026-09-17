@@ -24,6 +24,17 @@ _SKIP_DIRS = {
 
 
 def ingest_chunks(max_chunk_size: int) -> list[Chunk]:
+    """Read the corpus and produce character-preserving source chunks.
+
+    Args:
+        max_chunk_size: Maximum number of characters per chunk.
+
+    Returns:
+        Chunks from supported corpus files.
+
+    Raises:
+        FileNotFoundError: If the expected corpus directory is absent.
+    """
     root = _RAW_ROOT
     if not root.is_dir():
         raise FileNotFoundError(f"Corpus directory not found: {root}")

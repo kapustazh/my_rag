@@ -37,6 +37,14 @@ INDEX_DIR = Path("data/processed/lexical")
 
 
 def tokenize(text: str) -> list[str]:
+    """Tokenize text while preserving and splitting identifiers.
+
+    Args:
+        text: Text to tokenize.
+
+    Returns:
+        Lowercase lexical tokens.
+    """
     tokens: list[str] = []
     for tok in _TOKEN.findall(text.lower()):
         tokens.append(tok)
@@ -46,11 +54,30 @@ def tokenize(text: str) -> list[str]:
 
 
 def _path_tokens(file_path: str) -> list[str]:
+    """Extract searchable tokens from a file name and parent directory.
+
+    Args:
+        file_path: Corpus-relative source path.
+
+    Returns:
+        Tokens derived from the path.
+    """
     path = Path(file_path)
     return tokenize(path.stem) + tokenize(path.parent.name)
 
 
 def build_index(chunks: list[Chunk]) -> bm25s.BM25:
+    """Build and persist a BM25 index for source chunks.
+
+    Args:
+        chunks: Source chunks to index.
+
+    Returns:
+        The populated BM25 retriever.
+
+    Raises:
+        ValueError: If no chunks are supplied.
+    """
     if not chunks:
         raise ValueError("No chunks to index")
     tokenized_chunks = [
@@ -73,6 +100,14 @@ def build_index(chunks: list[Chunk]) -> bm25s.BM25:
 
 
 def load_index() -> bm25s.BM25:
+    """Load the persisted BM25 index and source metadata.
+
+    Returns:
+        The stored BM25 retriever.
+
+    Raises:
+        FileNotFoundError: If the index has not been created.
+    """
     if not (INDEX_DIR / "params.index.json").is_file():
         raise FileNotFoundError(
             f"Index not found: {INDEX_DIR}. Run index first."
@@ -82,6 +117,15 @@ def load_index() -> bm25s.BM25:
 
 
 def search(query: str, k: int) -> list[MinimalSource]:
+    """Retrieve the highest-ranked sources for a query.
+
+    Args:
+        query: Natural-language or identifier-based search query.
+        k: Maximum number of sources to return.
+
+    Returns:
+        Ranked source locations, or an empty list for no usable tokens.
+    """
     tokens = tokenize(query)
     keywords = [t for t in tokens if t not in _QUESTION_STOPWORDS]
     tokens = keywords or tokens
