@@ -19,7 +19,6 @@ help:
 	@printf "  $(GREEN)clean$(RESET)        $(GRAY)- Remove caches and bytecode$(RESET)\n"
 	@printf "  $(GREEN)lint$(RESET)         $(GRAY)- Run linting$(RESET)\n"
 	@printf "  $(GREEN)lint-strict$(RESET)  $(GRAY)- Run strict linting$(RESET)\n"
-	@printf "  $(GREEN)test$(RESET)         $(GRAY)- Run tests$(RESET)\n"
 
 install:
 	@mkdir -p .cache/uv_cache .cache/hf_cache
@@ -33,7 +32,7 @@ debug:
 
 clean:
 	@find . -type f -name '*.py[co]' -delete
-	@rm -rf .mypy_cache .pytest_cache .cache data/processed data/output
+	@rm -rf .mypy_cache .cache data/processed data/output
 	@find . -type d -name __pycache__ -exec rm -rf {} +
 
 lint:
@@ -51,7 +50,4 @@ lint-strict:
 	@uv run flake8 . --exclude=.git,.venv,.cache,__pycache__,data
 	@uv run mypy . --strict --ignore-missing-imports --exclude='(^\.venv/|^\.cache/|^data/)'
 
-test:
-	@uv run python -m pytest tests/
-
-.PHONY: help install run debug clean lint lint-strict test
+.PHONY: help install run debug clean lint lint-strict

@@ -17,7 +17,7 @@ make install      # install dependencies
 make lint-strict  # run strict linting locally
 ```
 
-## Test the main pipeline
+## Run the main pipeline
 
 Run from the repository root. If `data/raw/` is missing, extract the corpus:
 
@@ -30,7 +30,7 @@ unzip -q vllm-0.10.1.zip -d data/raw
 # Build the BM25 index.
 uv run python -m src index --max_chunk_size 2000
 
-# Test one question.
+# Search one question.
 uv run python -m src search \
   "What HTTP endpoint dynamically loads a LoRA adapter?" \
   --k 5
@@ -59,7 +59,7 @@ uv run python -m src answer_dataset \
   --save_directory data/output/search_results_and_answer/UnansweredQuestions
 ```
 
-## Test the FastAPI API
+## Run the FastAPI API
 
 Start the API in one terminal:
 
@@ -83,18 +83,6 @@ curl --request POST \
 ```
 
 API documentation is available at <http://127.0.0.1:8000/docs>.
-
-## CI and pull requests
-
-Every push to a feature branch runs `make lint-strict` in GitHub Actions. A
-passing branch with no existing PR automatically opens one against `main`.
-
-To block merges when CI fails, enable branch protection on `main`:
-
-1. GitHub repo → **Settings** → **Branches** → **Add branch ruleset** (or edit rule for `main`)
-2. Require a pull request before merging
-3. Require status check **lint-strict**
-4. Save
 
 # System architecture
 
@@ -193,10 +181,10 @@ before invoking services.
 
 # Example usage
 
-The full workflow is in [Test the main pipeline](#test-the-main-pipeline).
+The full workflow is in [Run the main pipeline](#run-the-main-pipeline).
 Start the API with `uv run
-uvicorn src.api:app --host 127.0.0.1 --port 8000` and use the request in [Test
-the FastAPI API](#test-the-fastapi-api).
+uvicorn src.api:app --host 127.0.0.1 --port 8000` and use the request in [Run
+the FastAPI API](#run-the-fastapi-api).
 
 # Resources
 
@@ -211,5 +199,5 @@ the FastAPI API](#test-the-fastapi-api).
 ## AI usage
 
 AI helped review RAG behavior, chunking, retrieval, Python Fire type coercion,
-tests, and README documentation. Results and decisions were checked against the
-local code and datasets.
+and README documentation. Results and decisions were checked against the local
+code and datasets.
